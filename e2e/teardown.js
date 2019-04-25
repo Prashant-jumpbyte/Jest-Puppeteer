@@ -4,6 +4,7 @@ const path = require('path');
 module.exports = async function () {
 	// global.__SERVER__.close();
 
+
 	await global.__BROWSER__.close();
 
 	// if (process.env.VISWIZ_API_KEY) {

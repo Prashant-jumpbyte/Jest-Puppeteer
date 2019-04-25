@@ -1,9 +1,13 @@
 const path = require('path');
-const timeout = 500000
-const shipmentData = require('../data/shipment-batch.json');
+const timeout = 30000
+const shipmentData = require('../data/shipment-data.json');
+const { supervisorScan } = require('../model/supervisorScan');
+const { Login } = require('../model/Login');
 
-describe('/ (Shipment-batch)', () => {
+
+describe('/ (ItemHold/Return-Item)', () => {
     let page
+    // page.setDefaultNavigationTimeout(800000)
     beforeAll(async () => {
         page = await global.__BROWSER__.newPage()
         await page.setViewport({
@@ -11,9 +15,13 @@ describe('/ (Shipment-batch)', () => {
             height: 1080
         });
         await page.goto('https://ranger.coordinate.work', {
-            waitUntil: 'networkidle2'
+            waitLoad: true,
+            waitNetworkIdle: true,
+            timeout: 0,
+            waitUntil: 'domcontentloaded'
         })
         await page.evaluate('document.documentElement.webkitRequestFullscreen()');
+
     }, timeout)
 
     afterAll(async () => {
@@ -21,72 +29,53 @@ describe('/ (Shipment-batch)', () => {
     })
 
     it('Login Step Success', async () => {
-        let emailtxt = await page.$("input[name=email]");
-        await emailtxt.click({
-            clickCount: 3
-        })
-        await emailtxt.type('1000', {
-            delay: 10
-        });
-
-        let passwordtxt = await page.$("input[name=password]");
-        await passwordtxt.click({
-            clickCount: 3
-        })
-
-        await passwordtxt.type('123456', {
-            delay: 10
-        });
-
-        let submitbtn = await page.$("button[type='submit']");
-
-        await submitbtn.click();
-        page.waitForNavigation({
-            waitUntil: 'networkidle0'
-        });
-        await page.waitFor(1000);
-        const url = await page.evaluate(() => location.href);
-
-        try {
-            console.log(url);
-            await expect(url).toEqual("https://ranger.coordinate.work/app/home");
-        } catch (err) {
-            await page.screenshot({
-                fullPage: true,
-                path: `${path.resolve(__dirname, '..', '..', 'results')}/shipment-batch-test-1.png`,
-            });
+        if (await page.$('input[name=email]') !== null) {
+            await page.waitForSelector("input[name=email]");
+            await Login(page, shipmentData.Login.ID, shipmentData.Login.password)
         }
     }, timeout)
 
-    it("Add shipment batch / Error Tracking Id already exist", async () => {
-
+    it("Go to Shipment batch screen", async () => {
         await page.waitForSelector('.container-fluid > #bs-example-navbar-collapse-1 > .nav > .dropdown > .ng-binding')
         await page.click('.container-fluid > #bs-example-navbar-collapse-1 > .nav > .dropdown > .ng-binding')
 
         await page.waitForSelector('.dropdown > .dropdown-menu > .ng-scope:nth-child(7) > .ng-scope > .ng-scope')
         await page.click('.dropdown > .dropdown-menu > .ng-scope:nth-child(7) > .ng-scope > .ng-scope')
 
+        await page.waitFor(500)
+        await page.waitForSelector('.col-sm-3 > .searchandselect > .header > .caption > span')
+        let headertxt = await page.$eval('.navbar-default > .container-fluid > .navbar-center > strong > .ng-scope', e => e.innerText);
+        try {
+            await expect(headertxt).toBe('Shipment Batch');
+        } catch (err) {
+            await page.screenshot({
+                fullPage: true,
+                path: `${path.resolve(__dirname, '..', '..', 'results')}/${new Date().toISOString()}_shipmentMenu.png`,
+            });
+        }
+
+    }, timeout);
+
+    it("Add shipment batch / Error Tracking Id already exist", async () => {
+
         await page.waitForSelector('.col-sm-3 > .searchandselect > .header > .caption > span')
         await page.click('.col-sm-3 > .searchandselect > .header > .caption > span')
-
-        // await page.waitForSelector('.form-validate > .row > .col-sm-3 > .searchandselect > .header')
-        // await page.click('.form-validate > .row > .col-sm-3 > .searchandselect > .header')
 
         await page.waitForSelector('.dropdownone > .inner-item > .child:nth-child(2) > .width-per95 > .ng-binding')
         await page.click('.dropdownone > .inner-item > .child:nth-child(2) > .width-per95 > .ng-binding')
 
         let count = 0;
-        let txtIdLoc, txtTrackingIdLoc, txtAmountLoc
+        let txtLocationID, txtTrackingID, txtAmountLoc
 
         for (i in shipmentData.shipment.invalid) {
             count++
-            txtIdLoc = '.scroll-content > .ng-isolate-scope:nth-child(' + count + ') > .col-width-100 > div > .ng-invalid-required'
-            txtTrackingIdLoc = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(2) > .form-control'
+            txtLocationID = '.scroll-content > .ng-isolate-scope:nth-child(' + count + ') > .col-width-100 > div > .ng-invalid-required'
+            txtTrackingID = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(2) > .form-control'
             txtAmountLoc = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(3) > .form-control'
             txtLast = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .coin-entry:nth-child(10) > .form-control'
 
-            await page.waitForSelector(txtIdLoc)
-            let txtId = await page.$(txtIdLoc)
+            await page.waitForSelector(txtLocationID)
+            let txtId = await page.$(txtLocationID)
             await txtId.click({
                 clickCount: 1
             })
@@ -94,8 +83,8 @@ describe('/ (Shipment-batch)', () => {
                 delay: 10
             });
 
-            await page.waitForSelector(txtTrackingIdLoc)
-            let txtTrackingId = await page.$(txtTrackingIdLoc)
+            await page.waitForSelector(txtTrackingID)
+            let txtTrackingId = await page.$(txtTrackingID)
 
             await txtTrackingId.click({
                 clickCount: 1
@@ -106,26 +95,19 @@ describe('/ (Shipment-batch)', () => {
             });
 
             await page.waitForSelector(txtAmountLoc)
-            let txtAmount = await page.$(txtAmountLoc)
-            await txtAmount.click({
+            let txtAmountfieldLoc = await page.$(txtAmountLoc)
+            await txtAmountfieldLoc.click({
                 clickCount: 1
             })
-            await txtAmount.type(shipmentData.shipment.invalid[count - 1].amount.toString(), {
+            await txtAmountfieldLoc.type(shipmentData.shipment.invalid[count - 1].amount.toString(), {
                 delay: 10
             });
 
             if (count != shipmentData.shipment.invalid.length) {
 
                 await page.focus(txtLast);
-                //--------------First option for key press----------------
                 await page.keyboard.press('Tab');
                 await page.keyboard.press('Tab');
-
-                //--------------Second option for key press----------------
-                // await page.keyboard.down('Tab');
-                // await page.keyboard.up('Tab');
-                // await page.keyboard.down('Tab');
-                // await page.keyboard.up('Tab');
             }
         }
 
@@ -133,21 +115,45 @@ describe('/ (Shipment-batch)', () => {
         await btnRout.click();
         dpRoute = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(12) > .form-control'
         await page.waitForSelector(dpRoute)
-        await page.waitFor(1000)
+        await page.waitFor(1500)
         count = 0;
+        Flaghold = 0
         for (i in shipmentData.shipment.invalid) {
             count++
             dpRoute = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(12) > .form-control'
             await page.waitForSelector(dpRoute)
-
             await page.select(dpRoute, 'string:' + shipmentData.shipment.invalid[count - 1].Route)
+            if (shipmentData.shipment.invalid[count - 1].Route == "HOLD") {
+                Flaghold = 1;
+            }
         }
-        let btnCommit = await page.$('.form-validate > .row > .col-sm-3 > .btn-group > .btn:nth-child(2)')
-        await btnCommit.click();
+
+        let btnCommit1 = await page.$('.form-validate > .row > .col-sm-3 > .btn-group > .btn:nth-child(2)')
+        await btnCommit1.click();
         await page.waitFor(3000)
+
+        if (Flaghold == 1) {
+            //scan supervisor
+            await supervisorScan(page, shipmentData.Supervisor.ID, shipmentData.Supervisor.password);
+
+        }
+
 
         btnerror = '.modal > .modal-dialog > .modal-content > .bg-danger > #modal-title'
         if (await page.waitForSelector(btnerror) !== null) {
+
+            await page.waitForSelector(".modal-open > .modal > .modal-md > .modal-content > #modal-body");
+            let lblshiperror = await page.$eval(".modal-open > .modal > .modal-md > .modal-content > #modal-body", e => e.innerText);
+            try {
+                console.log(lblshiperror);
+                await expect(lblshiperror).toBe('Shipment Tracking ID Must Be Unique');
+            } catch (err) {
+                await page.screenshot({
+                    fullPage: true,
+                    path: `${path.resolve(__dirname, '..', '..', 'results')}/${new Date().toISOString()}_shipment_already_available.png`,
+                });
+            }
+
             await page.waitForSelector(btnerror)
             await page.click(btnerror)
 
@@ -164,8 +170,15 @@ describe('/ (Shipment-batch)', () => {
 
     it("Add shipment batch / Valid Shipment", async () => {
 
-        // let VbtnReset = '.form-validate > .row > .col-sm-3 > .btn-group > .btn-danger'
-        let VbtnReset = '.form-validate > .row > .col-sm-3 > .btn-group > .btn:nth-child(3)'
+        //Reset shipment data
+        let VbtnReset = "";
+        if (await page.waitForSelector('.form-validate > .row > .col-sm-3 > .btn-group > .btn:nth-child(3)', {
+            visible: true
+        })) {
+            VbtnReset = '.form-validate > .row > .col-sm-3 > .btn-group > .btn:nth-child(3)'
+        } else {
+            VbtnReset = '.form-validate > .row > .col-sm-3 > .btn-group > .btn:nth-child(4)'
+        }
 
         await page.waitForSelector(VbtnReset)
         await page.click(VbtnReset, {
@@ -179,16 +192,12 @@ describe('/ (Shipment-batch)', () => {
         } catch (e) {
             await page.screenshot({
                 fullPage: true,
-                path: `${path.resolve(__dirname, '..', '..', 'results')}/Shipment-batch-Reset-bnt.png`,
+                path: `${path.resolve(__dirname, '..', '..', 'results')}/${new Date().toISOString()}_shipmentBatch.png`,
             });
         }
         await page.waitFor(1000)
-        // await page.waitForSelector('.container-fluid > #bs-example-navbar-collapse-1 > .nav > .dropdown > .ng-binding')
-        // await page.click('.container-fluid > #bs-example-navbar-collapse-1 > .nav > .dropdown > .ng-binding')
 
-        // await page.waitForSelector('.dropdown > .dropdown-menu > .ng-scope:nth-child(7) > .ng-scope > .ng-scope')
-        // await page.click('.dropdown > .dropdown-menu > .ng-scope:nth-child(7) > .ng-scope > .ng-scope')
-
+        //Select FROM location,
         await page.waitForSelector('.form-validate > .row > .col-sm-3 > .searchandselect > .selected-text-width')
         await page.click('.form-validate > .row > .col-sm-3 > .searchandselect > .selected-text-width')
         await page.waitFor(1000)
@@ -199,17 +208,17 @@ describe('/ (Shipment-batch)', () => {
         await page.click('.dropdownone > .inner-item > .child:nth-child(2) > .width-per95 > .ng-binding')
 
         let count = 0;
-        let txtIdLoc, txtTrackingIdLoc, txtAmountLoc
+        let txtLocationID, txtTrackingID, txtAmountLoc
 
         for (i in shipmentData.shipment.valid) {
             count++
-            txtIdLoc = '.scroll-content > .ng-isolate-scope:nth-child(' + count + ') > .col-width-100 > div > .ng-invalid-required'
-            txtTrackingIdLoc = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(2) > .form-control'
+            txtLocationID = '.scroll-content > .ng-isolate-scope:nth-child(' + count + ') > .col-width-100 > div > .ng-invalid-required'
+            txtTrackingID = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(2) > .form-control'
             txtAmountLoc = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(3) > .form-control'
             txtLast = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .coin-entry:nth-child(10) > .form-control'
 
-            await page.waitForSelector(txtIdLoc)
-            let txtId = await page.$(txtIdLoc)
+            await page.waitForSelector(txtLocationID)
+            let txtId = await page.$(txtLocationID)
             await txtId.click({
                 clickCount: 1
             })
@@ -217,8 +226,8 @@ describe('/ (Shipment-batch)', () => {
                 delay: 10
             });
 
-            await page.waitForSelector(txtTrackingIdLoc)
-            let txtTrackingId = await page.$(txtTrackingIdLoc)
+            await page.waitForSelector(txtTrackingID)
+            let txtTrackingId = await page.$(txtTrackingID)
 
             await txtTrackingId.click({
                 clickCount: 1
@@ -229,26 +238,20 @@ describe('/ (Shipment-batch)', () => {
             });
 
             await page.waitForSelector(txtAmountLoc)
-            let txtAmount = await page.$(txtAmountLoc)
-            await txtAmount.click({
+            let txtAmountfieldLoc = await page.$(txtAmountLoc)
+            await txtAmountfieldLoc.click({
                 clickCount: 1
             })
-            await txtAmount.type(shipmentData.shipment.valid[count - 1].amount.toString(), {
+            await txtAmountfieldLoc.type(shipmentData.shipment.valid[count - 1].amount.toString(), {
                 delay: 10
             });
 
             if (count != shipmentData.shipment.valid.length) {
 
                 await page.focus(txtLast);
-                //--------------First option for key press----------------
                 await page.keyboard.press('Tab');
                 await page.keyboard.press('Tab');
 
-                //--------------Second option for key press----------------
-                // await page.keyboard.down('Tab');
-                // await page.keyboard.up('Tab');
-                // await page.keyboard.down('Tab');
-                // await page.keyboard.up('Tab');
             }
         }
 
@@ -256,31 +259,39 @@ describe('/ (Shipment-batch)', () => {
         await btnRout.click();
         dpRoute = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(12) > .form-control'
         await page.waitForSelector(dpRoute)
-        await page.waitFor(2000)
+        await page.waitFor(1500)
         count = 0;
+        Flaghold = 0
         for (i in shipmentData.shipment.valid) {
             count++
-
+            dpRoute = '.table > .scroll-content > .shipment-record:nth-child(' + count + ') > .col-width-100:nth-child(12) > .form-control'
             await page.waitForSelector(dpRoute)
             await page.select(dpRoute, 'string:' + shipmentData.shipment.valid[count - 1].Route)
+            if (shipmentData.shipment.valid[count - 1].Route == "HOLD") {
+                Flaghold = 1;
+            }
         }
 
         let btnCommit1 = await page.$('.form-validate > .row > .col-sm-3 > .btn-group > .btn:nth-child(2)')
         await btnCommit1.click();
-        await page.waitFor(3000)
+        await page.waitFor(1000)
+        if (Flaghold == 1) {
+            //scan supervisor
+            await supervisorScan(page, shipmentData.Supervisor.ID, shipmentData.Supervisor.password);
+        }
 
+        //Click Success > OK button
         try {
-            console.log("try")
+            await page.waitForSelector('.modal-sm > .modal-content > .ng-pristine > .modal-footer > .ng-binding')
+            await page.waitFor(1000)
+            await page.click('.modal-sm > .modal-content > .ng-pristine > .modal-footer > .ng-binding')
             await expect(await page.$evl('.modal-sm > .modal-content > .ng-pristine > .modal-footer > .ng-binding')).not(null);
         } catch (err) {
             await page.screenshot({
                 fullPage: true,
-                path: `${path.resolve(__dirname, '..', '..', 'results')}/Login-test-2.png`,
+                path: `${path.resolve(__dirname, '..', '..', 'results')}/${new Date().toISOString()}_shipmentBatch_2.png`,
             });
         }
-
-        await page.waitForSelector('.modal-sm > .modal-content > .ng-pristine > .modal-footer > .ng-binding')
-        await page.click('.modal-sm > .modal-content > .ng-pristine > .modal-footer > .ng-binding')
 
     }, timeout)
 

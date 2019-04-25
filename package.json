@@ -6,14 +6,17 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "jest"
+    "test": "jest --runInBand"
   },
   "devDependencies": {
     "express": "4.16.2",
     "jest": "22.4.0",
+    "jest-allure": "^0.1.1",
+    "jest-html-reporter": "^2.5.0",
     "puppeteer": "1.1.0"
   },
   "dependencies": {
-    "jest-junit": "^6.3.0"
+    "jest-junit": "^6.3.0",
+    "jest-stare": "^1.13.2"
   }
 }
