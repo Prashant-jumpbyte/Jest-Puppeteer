@@ -9,7 +9,7 @@ module.exports = async function () {
 	// app.use(express.static('client/'));
 	// global.__SERVER__ = app.listen(3000);
 	var options = {
-		headless: false,
+		headless: true,
 		args: [
 			'--disable-infobars',
 			'--start-maximized',
