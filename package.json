@@ -1,32 +1,19 @@
 {
-  "name": "tutorial-puppeteer-jest",
-  "version": "1.0.0",
-  "description": "Puppeteer and Jest",
-  "author": "AppGambit",
-  "main": "index.js",
-  "license": "MIT",
+  "private": true,
   "scripts": {
     "test": "jest --runInBand"
   },
   "devDependencies": {
     "chalk": "^2.3.0",
+    "jest": "^22.0.0",
     "prettier": "^1.9.2",
-    "rimraf": "^2.6.2",
-    "express": "^4.16.4",
-    "jest": "^24.7.1",
-    "jest-allure": "^0.1.1",
-    "jest-html-reporter": "^2.5.0",
-    "jest-junit": "^6.3.0",
-    "jest-stare": "^1.13.2",
-    "puppeteer": "^1.15.0"
+    "puppeteer": "^0.13.0",
+    "rimraf": "^2.6.2"
   },
   "dependencies": {
-    "express": "^4.16.4",
-    "jest": "^24.7.1",
     "jest-allure": "^0.1.1",
     "jest-html-reporter": "^2.5.0",
     "jest-junit": "^6.3.0",
-    "jest-stare": "^1.13.2",
-    "puppeteer": "^1.15.0"
+    "jest-stare": "^1.13.2"
   }
 }
