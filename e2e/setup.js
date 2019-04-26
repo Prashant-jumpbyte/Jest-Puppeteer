@@ -11,6 +11,7 @@ module.exports = async function () {
 	var options = {
 		headless: true,
 		args: [
+			'--no-sandbox',
 			'--disable-infobars',
 			'--start-maximized',
 		],
@@ -18,7 +19,7 @@ module.exports = async function () {
 	const browser = await puppeteer.launch(options)
 	global.__BROWSER__ = browser;
 	fs.writeFileSync(
-		path.join(__dirname, '..', 'tmp', 'puppeteerEndpoint'),
+		path.join(__dirname, '..', 'e2e', 'puppeteerEndpoint'),
 		browser.wsEndpoint()
 	);
 		
