@@ -1,36 +1,37 @@
-const fs = require('fs');
-const JestNodeEnvironment = require('jest-environment-node');
-const path = require('path');
-const puppeteer = require('puppeteer');
+const chalk = require('chalk')
+const NodeEnvironment = require('jest-environment-node')
+const puppeteer = require('puppeteer')
+const fs = require('fs')
+const os = require('os')
+const path = require('path')
 
-class TestEnvironment extends JestNodeEnvironment {
-	constructor(config) {
-		super(config);
-	}
+const DIR = path.join(os.tmpdir(), 'jest_puppeteer_global_setup')
 
-	async setup() {
-		await super.setup();
+class PuppeteerEnvironment extends NodeEnvironment {
+  constructor(config) {
+    super(config)
+  }
 
-		const wsEndpoint = fs.readFileSync(
-			path.join(__dirname, '..', 'tmp', 'puppeteerEndpoint'),
-			'utf8'
-		);
-		if (!wsEndpoint) {
-			throw new Error('wsEndpoint not found');
-		}
+  async setup() {
+    console.log(chalk.yellow('Setup Test Environment.'))
+    await super.setup()
+    const wsEndpoint = fs.readFileSync(path.join(DIR, 'wsEndpoint'), 'utf8')
+    if (!wsEndpoint) {
+      throw new Error('wsEndpoint not found')
+    }
+    this.global.__BROWSER__ = await puppeteer.connect({
+      browserWSEndpoint: wsEndpoint,
+    })
+  }
 
-		this.global.__BROWSER__ = await puppeteer.connect({
-			browserWSEndpoint: wsEndpoint,
-		});
-	}
+  async teardown() {
+    console.log(chalk.yellow('Teardown Test Environment.'))
+    await super.teardown()
+  }
 
-	async teardown() {
-		await super.teardown();
-	}
-
-	runScript(script) {
-		return super.runScript(script);
-	}
+  runScript(script) {
+    return super.runScript(script)
+  }
 }
 
-module.exports = TestEnvironment;
+module.exports = PuppeteerEnvironment

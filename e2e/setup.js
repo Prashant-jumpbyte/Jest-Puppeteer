@@ -1,37 +1,26 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const puppeteer = require('puppeteer');
-// let jestscreenshot = require('@jeeyah/jestscreenshot');
+const chalk = require('chalk')
+const puppeteer = require('puppeteer')
+const fs = require('fs')
+const mkdirp = require('mkdirp')
+const os = require('os')
+const path = require('path')
+
+const DIR = path.join(os.tmpdir(), 'jest_puppeteer_global_setup')
 
 module.exports = async function () {
-	// const app = express();
-	// app.use(express.static('client/'));
-	// global.__SERVER__ = app.listen(3000);
 	var options = {
-		headless: true,
+		headless: false,
 		args: [
 			'--no-sandbox',
 			'--disable-infobars',
 			'--start-maximized',
 		],
 	}
+	console.log(chalk.green('Setup Puppeteer'))
 	const browser = await puppeteer.launch(options)
-	global.__BROWSER__ = browser;
-	fs.writeFileSync(
-		path.join(__dirname, '..', 'e2e', 'puppeteerEndpoint'),
-		browser.wsEndpoint()
-	);
-		
-	// global.it = async function (name, func) {
-	// 	return await test(name, async () => {
-	// 		try {
-	// 			await func();
-	// 		} catch (e) {
-	// 			await fs.ensureDir('result/screenshots');
-	// 			await page.screenshot({ path: `result/screenshots/${name}.png` });
-	// 			throw e;
-	// 		}
-	// 	});
-	// };
-};
+	// This global is not available inside tests but only in global teardown
+	global.__BROWSER_GLOBAL__ = browser
+	// Instead, we expose the connection details via file system to be used in tests
+	mkdirp.sync(DIR)
+	fs.writeFileSync(path.join(DIR, 'wsEndpoint'), browser.wsEndpoint())
+}

@@ -9,6 +9,9 @@
     "test": "jest --runInBand"
   },
   "devDependencies": {
+    "chalk": "^2.3.0",
+    "prettier": "^1.9.2",
+    "rimraf": "^2.6.2",
     "express": "^4.16.4",
     "jest": "^24.7.1",
     "jest-allure": "^0.1.1",
