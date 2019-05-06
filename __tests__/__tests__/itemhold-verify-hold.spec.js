@@ -93,12 +93,15 @@ describe('/ (ItemHold/Return-Item)', () => {
             await page.click('.modal > .modal-dialog > .modal-content > .modal-footer > .btn:nth-child(3)')
 
             //Check If getting an error force close that shipments
-            if (await page.$('.modal-content > #modal-body > .ng-scope > .ng-scope > .ng-binding') !== null) {
+            console.log(await page.$eval(".ng-scope > .align-center-vertically > .align-center-vertically > .pull-right > .ng-binding:nth-child(3)", e => e.innerText))
+            if (await page.$eval(".ng-scope > .align-center-vertically > .align-center-vertically > .pull-right > .ng-binding:nth-child(3)", e => e.innerText) !== "0") {
+                console.log("IF UP")
                 await page.waitForSelector('.modal-content > #modal-body > .ng-scope > .ng-scope > .ng-binding')
                 await page.click('.modal-content > #modal-body > .ng-scope > .ng-scope > .ng-binding')
                 let lblerrortext = await page.$eval(".modal-content > #modal-body > .ng-scope > .ng-scope > .ng-binding", e => e.innerText);
                 if (lblerrortext == "Unable to locate the shipment you requested") {
                     //Click `Force close` button
+                    console.log("IF FC")
                     await page.waitForSelector('.modal > .modal-dialog > .modal-content > .modal-footer > .btn:nth-child(1)')
                     await page.click('.modal > .modal-dialog > .modal-content > .modal-footer > .btn:nth-child(1)')
 
@@ -107,14 +110,21 @@ describe('/ (ItemHold/Return-Item)', () => {
                     console.log("Count", count);
                     await page.waitFor(1000)
                     for (i = 1; i <= count; i++) {
-                        await page.waitForSelector('.ng-scope:nth-child(' + i + ') > .col-sm-5 > .row > .col-sm-12 > .ng-invalid-required')
-                        await page.select('.ng-scope:nth-child(' + i + ') > .col-sm-5 > .row > .col-sm-12 > .ng-invalid-required', 'string:Shipment Not On Hold')
+                        if (count == 1) {
+                            await page.waitForSelector('.ng-scope > .col-sm-5 > .row > .col-sm-12 > .ng-invalid')
+                            await page.select('.ng-scope > .col-sm-5 > .row > .col-sm-12 > .ng-invalid', 'string:Shipment Not On Hold')
+
+                        } else {
+                            await page.waitForSelector('.ng-scope:nth-child(' + i + ') > .col-sm-5 > .row > .col-sm-12 > .ng-invalid-required')
+                            await page.select('.ng-scope:nth-child(' + i + ') > .col-sm-5 > .row > .col-sm-12 > .ng-invalid-required', 'string:Shipment Not On Hold')
+                        }
                     }
 
                     await page.waitForSelector('.modal-dialog > .modal-content > .form-validate > .modal-footer > .btn:nth-child(1)')
                     await page.click('.modal-dialog > .modal-content > .form-validate > .modal-footer > .btn:nth-child(1)')
 
                 } else {
+                    console.log("ELSE FC")
                     try {
                         await expect(lblerrortext).toBe('Unable to locate the shipment you requested');
                     } catch (err) {
