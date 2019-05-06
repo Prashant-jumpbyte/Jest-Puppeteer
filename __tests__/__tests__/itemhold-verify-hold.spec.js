@@ -87,11 +87,11 @@ describe('/ (ItemHold/Return-Item)', () => {
             //scan supervisor
             await supervisorScan(page, shipmentData.Supervisor.ID, shipmentData.Supervisor.password);
 
-            await page.waitFor(1000)
+            await page.waitFor(2000)
             //Click on `Bulk verify` button of `Verify Item Hold` modal
             await page.waitForSelector('.modal > .modal-dialog > .modal-content > .modal-footer > .btn:nth-child(3)')
             await page.click('.modal > .modal-dialog > .modal-content > .modal-footer > .btn:nth-child(3)')
-
+            await page.waitFor(1000)
             //Check If getting an error force close that shipments
             console.log(await page.$eval(".ng-scope > .align-center-vertically > .align-center-vertically > .pull-right > .ng-binding:nth-child(3)", e => e.innerText))
             if (await page.$eval(".ng-scope > .align-center-vertically > .align-center-vertically > .pull-right > .ng-binding:nth-child(3)", e => e.innerText) !== "0") {
