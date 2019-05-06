@@ -62,9 +62,9 @@ describe('/ (ItemHold/Return-Item)', () => {
             });
         }
 
-    }, timeout);
+    }, timeout)
 
-    it("Relaese-Item", async () => {
+    it("Delete-Item", async () => {
 
         //Select All in status Dropdown
         await page.select('.ng-isolate-scope > .margin-top-40 > .align-center-horizontally > .col-sm-3 > #category', 'string:')
@@ -103,18 +103,14 @@ describe('/ (ItemHold/Return-Item)', () => {
 
                 console.log(trackingID, fromLocation, toLocation);
                 if (fromLocation != "N/A" || toLocation != "N/A") {
-                    //Click release button
-                    await page.waitForSelector(".ng-scope:nth-child(" + i + ") > .td-vertical-align > .ng-scope > .btn-group > .btn-success > .glyphicon-repeat")
-                    await page.click(".ng-scope:nth-child(" + i + ") > .td-vertical-align > .ng-scope > .btn-group > .btn-success > .glyphicon-repeat")
 
-                    //Select release Route
-                    await page.waitForSelector('.table > tbody > tr > .col-xs-4 > .form-control')
-                    await page.select('.table > tbody > tr > .col-xs-4 > .form-control', 'string:' + shipmentData.releaseitem.route)
-                    await page.waitFor(2000)
+                    //Click Delete button
+                    await page.waitForSelector(".ng-scope:nth-child(" + i + ") > .td-vertical-align > .ng-scope > .btn-group > .btn-danger > .glyphicon-trash")
+                    await page.click(".ng-scope:nth-child(" + i + ") > .td-vertical-align > .ng-scope > .btn-group > .btn-danger > .glyphicon-trash")
 
-                    //Add comment
-                    await page.waitForSelector('.list-group > .row > #modal-body > .form-group > .ng-untouched')
-                    let txtcomment = await page.$('.list-group > .row > #modal-body > .form-group > .ng-untouched')
+                    //Open Reason modal
+                    await page.waitForSelector('.list-group > .row > #modal-body > .col-sm-12 > .ng-untouched')
+                    let txtcomment = await page.$('.list-group > .row > #modal-body > .col-sm-12 > .ng-untouched')
 
                     await txtcomment.click({
                         clickCount: 1
@@ -124,7 +120,7 @@ describe('/ (ItemHold/Return-Item)', () => {
                         delay: 10
                     });
 
-                    //Click on Release button
+                    //Submit Reason
                     await page.waitForSelector('.modal-dialog > .modal-content > .form-validate > .modal-footer > .btn:nth-child(2)')
                     await page.click('.modal-dialog > .modal-content > .form-validate > .modal-footer > .btn:nth-child(2)')
 
@@ -133,21 +129,19 @@ describe('/ (ItemHold/Return-Item)', () => {
                     await page.waitFor(2000)
 
                     await page.waitForSelector('.table > .table > tbody > .ng-scope > .remove-white-space')
-                    console.log((await page.$$('.table > .table > tbody > .ng-scope > .remove-white-space')).length)
                     let afterrowCount = (await page.$$('.table > .table > tbody > .ng-scope > .remove-white-space')).length;
                     let afterpageCount = ((await page.$$('.ng-scope > .col-sm-12 > .ng-not-empty > .ng-scope > .ng-binding')).length - 2);
-                    console.log("page ", pageCount)
                     let afterpageC = 2;
 
                     for (j = 1; j <= afterrowCount; j++) {
                         try {
                             //Check after realse shipment should be not displayed
                             await expect(await page.$eval(".table > .table > tbody > .ng-scope:nth-child(" + j + ") > .remove-white-space", e => e.innerText)).not.toBe(trackingID);
-                            console.log("Release success.!")
+                            console.log("Delete success.!")
                         } catch (err) {
                             await page.screenshot({
                                 fullPage: true,
-                                path: `${path.resolve(__dirname, '..', '..', 'results')}/${new Date().toISOString()}_relaese_Item.png`,
+                                path: `${path.resolve(__dirname, '..', '..', 'results')}/${new Date().toISOString()}_delete_Item.png`,
                             });
                         }
 

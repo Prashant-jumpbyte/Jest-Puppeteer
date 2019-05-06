@@ -4,10 +4,8 @@ const shipmentData = require('../data/shipment-data.json');
 const { supervisorScan } = require('../model/supervisorScan');
 const { Login } = require('../model/Login');
 
-
 describe('/ (ItemHold/Return-Item)', () => {
     let page
-    // page.setDefaultNavigationTimeout(800000)
     beforeAll(async () => {
         page = await global.__BROWSER__.newPage()
         await page.setViewport({
@@ -17,11 +15,9 @@ describe('/ (ItemHold/Return-Item)', () => {
         await page.goto('https://ranger.coordinate.work', {
             waitLoad: true,
             waitNetworkIdle: true,
-            timeout: 0,
-            waitUntil: 'domcontentloaded'
+            timeout: 0
         })
         await page.evaluate('document.documentElement.webkitRequestFullscreen()');
-
     }, timeout)
 
     afterAll(async () => {
@@ -29,11 +25,42 @@ describe('/ (ItemHold/Return-Item)', () => {
     })
 
     it('Login Step Success', async () => {
-        if (await page.$('input[name=email]') !== null) {
-            await page.waitFor(1000)
-            await page.waitForSelector("input[name=email]");
-            await Login(page, shipmentData.Login.ID, shipmentData.Login.password)
+        let emailtxt = await page.$("input[name=email]");
+        await emailtxt.click({
+            clickCount: 3
+        })
+        await emailtxt.type(shipmentData.Login.ID, {
+            delay: 10
+        });
+
+        let passwordtxt = await page.$("input[name=password]");
+        await passwordtxt.click({
+            clickCount: 3
+        })
+
+        await passwordtxt.type(shipmentData.Login.password, {
+            delay: 10
+        });
+
+        let submitbtn = await page.$("button[type='submit']");
+
+        await submitbtn.click();
+        page.waitForNavigation({
+            waitUntil: 'networkidle0'
+        });
+        await page.waitFor(1000);
+        const url = await page.evaluate(() => location.href);
+
+        try {
+            console.log(url);
+            await expect(url).toEqual("https://ranger.coordinate.work/app/home");
+        } catch (err) {
+            await page.screenshot({
+                fullPage: true,
+                path: `${path.resolve(__dirname, '..', '..', 'results')}/${new Date().toISOString()}_Login.png`,
+            });
         }
+
     }, timeout)
 
     it("Go to Item Hold screen", async () => {
@@ -64,8 +91,7 @@ describe('/ (ItemHold/Return-Item)', () => {
 
     }, timeout);
 
-    it("Relaese-Item", async () => {
-
+    it("Return-Item", async () => {
         //Select All in status Dropdown
         await page.select('.ng-isolate-scope > .margin-top-40 > .align-center-horizontally > .col-sm-3 > #category', 'string:')
 
@@ -103,18 +129,18 @@ describe('/ (ItemHold/Return-Item)', () => {
 
                 console.log(trackingID, fromLocation, toLocation);
                 if (fromLocation != "N/A" || toLocation != "N/A") {
-                    //Click release button
-                    await page.waitForSelector(".ng-scope:nth-child(" + i + ") > .td-vertical-align > .ng-scope > .btn-group > .btn-success > .glyphicon-repeat")
-                    await page.click(".ng-scope:nth-child(" + i + ") > .td-vertical-align > .ng-scope > .btn-group > .btn-success > .glyphicon-repeat")
+                    //Click Return button
+                    await page.waitForSelector(".ng-scope:nth-child(" + i + ") > .td-vertical-align > .ng-scope > .btn-group > .btn-info > .glyphicon-remove")
+                    await page.click(".ng-scope:nth-child(" + i + ") > .td-vertical-align > .ng-scope > .btn-group > .btn-info > .glyphicon-remove")
 
-                    //Select release Route
+                    //Select Return Route
                     await page.waitForSelector('.table > tbody > tr > .col-xs-4 > .form-control')
                     await page.select('.table > tbody > tr > .col-xs-4 > .form-control', 'string:' + shipmentData.releaseitem.route)
                     await page.waitFor(2000)
 
                     //Add comment
-                    await page.waitForSelector('.list-group > .row > #modal-body > .form-group > .ng-untouched')
-                    let txtcomment = await page.$('.list-group > .row > #modal-body > .form-group > .ng-untouched')
+                    await page.waitForSelector('.list-group > .row > #modal-body > .form-group > .ng-valid')
+                    let txtcomment = await page.$('.list-group > .row > #modal-body > .form-group > .ng-valid')
 
                     await txtcomment.click({
                         clickCount: 1
@@ -124,7 +150,7 @@ describe('/ (ItemHold/Return-Item)', () => {
                         delay: 10
                     });
 
-                    //Click on Release button
+                    //Click on Return button
                     await page.waitForSelector('.modal-dialog > .modal-content > .form-validate > .modal-footer > .btn:nth-child(2)')
                     await page.click('.modal-dialog > .modal-content > .form-validate > .modal-footer > .btn:nth-child(2)')
 
@@ -143,7 +169,7 @@ describe('/ (ItemHold/Return-Item)', () => {
                         try {
                             //Check after realse shipment should be not displayed
                             await expect(await page.$eval(".table > .table > tbody > .ng-scope:nth-child(" + j + ") > .remove-white-space", e => e.innerText)).not.toBe(trackingID);
-                            console.log("Release success.!")
+                            console.log("Return success.!")
                         } catch (err) {
                             await page.screenshot({
                                 fullPage: true,

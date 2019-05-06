@@ -61,7 +61,18 @@
             }
         ]
     },
+    "releaseitem": {
+        "comment": "This is Puppeteer script for release item",
+        "route": "005"
+    },
+    "returnitem": {
+        "comment": "This is Puppeteer script for return item",
+        "route": "005"
+    },
     "verifyhold": {
-        "comment": "This is Puppeteer verify hold testing"
+        "comment": "This is Puppeteer script for verify hold"
+    },
+    "delete_shipment": {
+        "comment": "This is Puppeteer script for delete shipment"
     }
 }
