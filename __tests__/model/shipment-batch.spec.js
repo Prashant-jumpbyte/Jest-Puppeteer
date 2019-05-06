@@ -1,8 +1,8 @@
 const path = require('path');
 const timeout = 30000
 const shipmentData = require('../data/shipment-data.json');
-const { supervisorScan } = require('../model/supervisorScan');
-const { Login } = require('../model/Login');
+const { supervisorScan } = require('./supervisorScan');
+const { Login } = require('./Login');
 
 
 describe('/ (ItemHold/Return-Item)', () => {
