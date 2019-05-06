@@ -10,7 +10,7 @@ const DIR = path.join(os.tmpdir(), 'jest_puppeteer_global_setup')
 module.exports = async function () {
 	console.log(chalk.green('Setup Puppeteer'))
 	var options = {
-		headless: false,
+		headless: true,
 		args: [
 			'--no-sandbox',
 			'--disable-infobars',
